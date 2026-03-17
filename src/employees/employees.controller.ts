@@ -1,21 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, 
+Query, Ip } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
+import { MyLoggerService } from 'src/my-logger/my-logger.service';
 
 @SkipThrottle()
 @Controller('employees')
 export class EmployeesController {
-  constructor(private readonly employeesService: EmployeesService) {}
+  constructor(
+    private readonly employeesService: EmployeesService,
+    private readonly logger: MyLoggerService
+  ) {}
 
   @Post()
-  create(@Body() createEmployeeDto: Prisma.EmployeeCreateInput) {
+  create(@Ip() ip: string, @Body() createEmployeeDto: Prisma.EmployeeCreateInput) {
+    this.logger.log(`Ip: ${ip} is creating a new employee ${createEmployeeDto.name}, ${EmployeesController.name}`)
     return this.employeesService.create(createEmployeeDto);
   }
 
   @SkipThrottle({ default: false })
   @Get()
-  findAll(@Query('role') role?: 'INTERN' | 'ENGINEER' | 'ADMIN') {
+  findAll(@Ip() ip: string, @Query('role') role?: 'INTERN' | 'ENGINEER' | 'ADMIN') {
+    this.logger.log(`Request for ALL Employees\t${ip}`);
     return this.employeesService.findAll(role);
   }
 
